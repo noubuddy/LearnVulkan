@@ -9,25 +9,39 @@ bool Vulkan::init()
     return createInstance();
 }
 
+void Vulkan::setValidationInstance(const Validation* t_validation_instance)
+{
+    mValidation = t_validation_instance;
+}
+
 bool Vulkan::createInstance()
 {
     VkApplicationInfo appInfo{};
-    appInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pApplicationName = "Vulkan";
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.pEngineName = "Vulkan Engine";
-    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = VK_API_VERSION_1_0;
-
-    uint32_t glfwExtensionCount = 0;
-    const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+    {
+        appInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        appInfo.pApplicationName = "Vulkan";
+        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.pEngineName = "Vulkan Engine";
+        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.apiVersion = VK_API_VERSION_1_0;
+    }
     
     VkInstanceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
-    createInfo.enabledExtensionCount = glfwExtensionCount;
-    createInfo.ppEnabledExtensionNames = glfwExtensions;
-    createInfo.enabledLayerCount = 0;
+    auto extensions = getRequiredExtensions();
+    createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+    createInfo.ppEnabledExtensionNames = extensions.data();
+    if (mValidation->enableValidationLayers)
+    {
+        createInfo.enabledLayerCount = static_cast<uint32_t>(mValidation->validationLayers.size());
+        createInfo.ppEnabledLayerNames = mValidation->validationLayers.data();
+    }
+    else
+    {
+        createInfo.enabledLayerCount = 0;
+    }
+    
 
     // std::vector<const char*> requiredExtensions;
     //
@@ -42,15 +56,16 @@ bool Vulkan::createInstance()
     // createInfo.enabledExtensionCount = (uint32_t) requiredExtensions.size();
     // createInfo.ppEnabledExtensionNames = requiredExtensions.data();
 
-    uint32_t propertyCount = 0;
-    std::vector<VkExtensionProperties> extensions;
-    vkEnumerateInstanceExtensionProperties(nullptr, &propertyCount, extensions.data()); // TODO: Finish this
-
-    std::cout << "available extensions:\n";
-
-    for (const auto& extension : extensions) {
-        std::cout << '\t' << extension.extensionName << '\n';
-    }
+    // uint32_t propertyCount = 0;
+    // std::vector<VkExtensionProperties> extensions;
+    // vkEnumerateInstanceExtensionProperties(nullptr, &propertyCount, extensions.data()); // TODO: Finish this
+    //
+    // std::cout << "available extensions:\n";
+    //
+    // for (const auto& extension : extensions)
+    // {
+    //     std::cout << '\t' << extension.extensionName << '\n';
+    // }
 
     if (VkResult result = vkCreateInstance(&createInfo, nullptr, &instance))
     {
@@ -61,4 +76,19 @@ bool Vulkan::createInstance()
     }
 
     return false;
+}
+
+std::vector<const char*> Vulkan::getRequiredExtensions()
+{
+    uint32_t glfwExtensionCount = 0;
+    const char** glfwExtensions;
+    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+    std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+
+    if (mValidation->enableValidationLayers) {
+        extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+    }
+
+    return extensions;
 }

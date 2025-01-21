@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <vector>
 #include <iostream>
+#include "Validation.h"
 
 class Vulkan
 {
@@ -13,12 +14,16 @@ public:
     Vulkan();
 
     bool init();
+    void setValidationInstance(const Validation* t_validation_instance);
 
 private:
 
     bool createInstance();
 
+    std::vector<const char*> getRequiredExtensions();
+
     VkInstance instance;
+    const Validation* mValidation;
     
 };
 
