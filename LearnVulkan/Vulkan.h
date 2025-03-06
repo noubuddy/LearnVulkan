@@ -14,16 +14,19 @@ public:
     Vulkan();
 
     bool init();
-    void setValidationInstance(const Validation* t_validation_instance);
+    void setValidationInstance(Validation* t_validation_instance);
+    void setupDebugMessenger();
 
 private:
 
     bool createInstance();
 
-    std::vector<const char*> getRequiredExtensions();
+    VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
+    void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
 
     VkInstance instance;
-    const Validation* mValidation;
+    Validation* mValidation;
+    VkDebugUtilsMessengerEXT debugMessenger;
     
 };
 
